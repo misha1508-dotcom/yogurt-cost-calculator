@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Калькулятор себестоимости йогурта</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Калькулятор себестоимости йогурта</h1>
+            <p class="subtitle">Конструктор для расчета юнит-экономики производства на реутери</p>
+        </header>
+
+        <div class="controls">
+            <div class="config-controls">
+                <input type="text" id="configName" placeholder="Название конфигурации" class="config-input">
+                <button onclick="saveConfiguration()" class="btn btn-primary">💾 Сохранить конфигурацию</button>
+                <button onclick="showSavedConfigs()" class="btn btn-secondary">📂 Загрузить конфигурацию</button>
+                <button onclick="resetForm()" class="btn btn-secondary">🔄 Сбросить</button>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="form-section">
+                <div class="batch-settings">
+                    <h3>Основные параметры</h3>
+                    <div class="form-group">
+                        <label>Размер партии (шт):</label>
+                        <input type="number" id="batchSize" value="100" min="1" class="input-field">
+                    </div>
+                    <div class="form-group">
+                        <label>Цена продажи (₽/шт):</label>
+                        <input type="number" id="sellingPrice" value="0" step="0.01" class="input-field">
+                    </div>
+                </div>
+
+                <div id="categoriesContainer">
+                    <!-- Сырье -->
+                    <div class="category-block">
+                        <h3>🥛 Сырье</h3>
+                        <div id="raw_materials_items" class="items-container">
+                            <div class="item-row">
+                                <input type="text" placeholder="Молоко" value="Молоко" class="item-name">
+                                <input type="number" placeholder="Цена" value="50" step="0.01" class="item-price">
+                                <input type="number" placeholder="Кол-во" value="10" step="0.01" class="item-quantity">
+                                <span class="item-total">500.00 ₽</span>
+                                <button onclick="removeItem(this)" class="btn-remove">✕</button>
+                            </div>
+                            <div class="item-row">
+                                <input type="text" placeholder="Закваска" value="Закваска" class="item-name">
+                                <input type="number" placeholder="Цена" value="150" step="0.01" class="item-price">
+                                <input type="number" placeholder="Кол-во" value="1" step="0.01" class="item-quantity">
+                                <span class="item-total">150.00 ₽</span>
+                                <button onclick="removeItem(this)" class="btn-remove">✕</button>
+                            </div>
+                            <div class="item-row">
+                                <input type="text" placeholder="Инулин" value="Инулин" class="item-name">
+                                <input type="number" placeholder="Цена" value="200" step="0.01" class="item-price">
+                                <input type="number" placeholder="Кол-во" value="0.5" step="0.01" class="item-quantity">
+                                <span class="item-total">100.00 ₽</span>
+                                <button onclick="removeItem(this)" class="btn-remove">✕</button>
+                            </div>
+                        </div>
+                        <button onclick="addItem('raw_materials_items')" class="btn btn-add">+ Добавить</button>
+                    </div>
+
+                    <!-- Упаковка -->
+                    <div class="category-block">
+                        <h3>📦 Упаковка</h3>
+                        <div id="packaging_items" class="items-container">
+                            <div class="item-row">
+                                <input type="text" placeholder="Название" value="Бутылка ПЭТ" class="item-name">
+                                <input type="number" placeholder="Цена" value="6" step="0.01" class="item-price">
+                                <input type="number" placeholder="Кол-во" value="100" step="0.01" class="item-quantity">
+                                <span class="item-total">600.00 ₽</span>
+                                <button onclick="removeItem(this)" class="btn-remove">✕</button>
+                            </div>
+                            <div class="item-row">
+                                <input type="text" placeholder="Название" value="Платинка" class="item-name">
+                                <input type="number" placeholder="Цена" value="2" step="0.01" class="item-price">
+                                <input type="number" placeholder="Кол-во" value="100" step="0.01" class="item-quantity">
+                                <span class="item-total">200.00 ₽</span>
+                                <button onclick="removeItem(this)" class="btn-remove">✕</button>
+                            </div>
+                            <div class="item-row">
+                                <input type="text" placeholder="Название" value="Лотки" class="item-name">
+                                <input type="number" placeholder="Цена" value="15" step="0.01" class="item-price">
+                                <input type="number" placeholder="Кол-во" value="5" step="0.01" class="item-quantity">
+                                <span class="item-total">75.00 ₽</span>
+                                <button onclick="removeItem(this)" class="btn-remove">✕</button>
+                            </div>
+                            <div class="item-row">
+                                <input type="text" placeholder="Название" value="Коробки" class="item-name">
+                                <input type="number" placeholder="Цена" value="30" step="0.01" class="item-price">
+                                <input type="number" placeholder="Кол-во" value="2" step="0.01" class="item-quantity">
+                                <span class="item-total">60.00 ₽</span>
+                                <button onclick="removeItem(this)" class="btn-remove">✕</button>
+                            </div>
+                        </div>
+                        <button onclick="addItem('packaging_items')" class="btn btn-add">+ Добавить</button>
+                    </div>
+
+                    <!-- Логистика -->
+                    <div class="category-block">
+                        <h3>🚚 Логистика</h3>
+                        <div id="logistics_items" class="items-container">
+                            <div class="item-row">
+                                <input type="text" placeholder="Название" value="Транспорт" class="item-name">
+                                <input type="number" placeholder="Цена" value="500" step="0.01" class="item-price">
+                                <input type="number" placeholder="Кол-во" value="1" step="0.01" class="item-quantity">
+                                <span class="item-total">500.00 ₽</span>
+                                <button onclick="removeItem(this)" class="btn-remove">✕</button>
+                            </div>
+                        </div>
+                        <button onclick="addItem('logistics_items')" class="btn btn-add">+ Добавить</button>
+                    </div>
+
+                    <!-- Налоги -->
+                    <div class="category-block">
+                        <h3>💰 Налоги</h3>
+                        <div id="taxes_items" class="items-container">
+                            <div class="item-row">
+                                <input type="text" placeholder="Название" value="Налог" class="item-name">
+                                <input type="number" placeholder="Цена" value="300" step="0.01" class="item-price">
+                                <input type="number" placeholder="Кол-во" value="1" step="0.01" class="item-quantity">
+                                <span class="item-total">300.00 ₽</span>
+                                <button onclick="removeItem(this)" class="btn-remove">✕</button>
+                            </div>
+                        </div>
+                        <button onclick="addItem('taxes_items')" class="btn btn-add">+ Добавить</button>
+                    </div>
+
+                    <!-- Работа -->
+                    <div class="category-block">
+                        <h3>👷 Работа</h3>
+                        <div id="labor_items" class="items-container">
+                            <div class="item-row">
+                                <input type="text" placeholder="Название" value="Работа" class="item-name">
+                                <input type="number" placeholder="Цена" value="1000" step="0.01" class="item-price">
+                                <input type="number" placeholder="Кол-во" value="1" step="0.01" class="item-quantity">
+                                <span class="item-total">1000.00 ₽</span>
+                                <button onclick="removeItem(this)" class="btn-remove">✕</button>
+                            </div>
+                        </div>
+                        <button onclick="addItem('labor_items')" class="btn btn-add">+ Добавить</button>
+                    </div>
+
+                    <!-- Аренда -->
+                    <div class="category-block">
+                        <h3>🏢 Аренда</h3>
+                        <div id="rent_items" class="items-container">
+                            <div class="item-row">
+                                <input type="text" placeholder="Название" value="Аренда" class="item-name">
+                                <input type="number" placeholder="Цена" value="800" step="0.01" class="item-price">
+                                <input type="number" placeholder="Кол-во" value="1" step="0.01" class="item-quantity">
+                                <span class="item-total">800.00 ₽</span>
+                                <button onclick="removeItem(this)" class="btn-remove">✕</button>
+                            </div>
+                        </div>
+                        <button onclick="addItem('rent_items')" class="btn btn-add">+ Добавить</button>
+                    </div>
+
+                    <!-- Другие расходы -->
+                    <div class="category-block">
+                        <h3>📋 Другие расходы</h3>
+                        <div id="other_items" class="items-container">
+                        </div>
+                        <button onclick="addItem('other_items')" class="btn btn-add">+ Добавить</button>
+                    </div>
+                </div>
+
+                <button onclick="calculate()" class="btn btn-calculate">🧮 Рассчитать себестоимость</button>
+            </div>
+
+            <div class="results-section">
+                <h2>Результаты расчета</h2>
+                <div id="results" class="results-container">
+                    <p class="no-results">Нажмите "Рассчитать себестоимость" для получения результатов</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal для загрузки конфигураций -->
+        <div id="configModal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeModal()">&times;</span>
+                <h2>Сохраненные конфигурации</h2>
+                <div id="configsList"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
