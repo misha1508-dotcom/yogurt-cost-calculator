@@ -8,7 +8,7 @@ from datetime import datetime
 from typing import Dict, List
 
 app = Flask(__name__)
-DATA_DIR = 'data'
+DATA_DIR = '/tmp/data'
 CONFIGS_FILE = os.path.join(DATA_DIR, 'configurations.json')
 
 # Категории переменных затрат
