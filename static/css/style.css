@@ -103,12 +103,122 @@ header h1 {
     color: #495057;
 }
 
+.info-text {
+    font-weight: 600;
+    color: #667eea;
+    font-size: 1.1em;
+}
+
 .input-field {
     width: 150px;
     padding: 8px 12px;
     border: 2px solid #dee2e6;
     border-radius: 6px;
     font-size: 1em;
+}
+
+/* Ingredients system */
+.ingredients-help {
+    background: #e7f3ff;
+    padding: 10px 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    color: #0066cc;
+    font-size: 0.9em;
+}
+
+.ingredients-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.ingredient-row {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    border: 2px solid #e9ecef;
+    transition: all 0.3s;
+}
+
+.ingredient-row:hover {
+    border-color: #667eea;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+}
+
+.ingredient-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.ingredient-checkbox {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}
+
+.ingredient-name {
+    font-weight: 700;
+    font-size: 1.1em;
+    color: #495057;
+}
+
+.ingredient-inputs {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    margin-left: 30px;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.input-group label {
+    font-size: 0.85em;
+    color: #6c757d;
+    font-weight: 600;
+}
+
+.ingredient-dose,
+.ingredient-price-per-unit,
+.ingredient-package-size {
+    padding: 6px 10px;
+    border: 2px solid #dee2e6;
+    border-radius: 6px;
+    font-size: 0.95em;
+    width: 100%;
+}
+
+.ingredient-total-needed,
+.ingredient-cost {
+    font-weight: 600;
+    color: #28a745;
+    padding: 6px 10px;
+    background: white;
+    border-radius: 6px;
+    border: 2px solid #e9ecef;
+}
+
+.ingredient-cost {
+    color: #667eea;
+}
+
+.category-total {
+    margin-top: 15px;
+    padding: 12px 15px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 1.1em;
+    text-align: right;
 }
 
 .category-block {

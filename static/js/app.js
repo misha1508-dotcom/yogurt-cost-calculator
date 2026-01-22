@@ -4,9 +4,101 @@ document.addEventListener('DOMContentLoaded', function() {
     document.addEventListener('input', function(e) {
         if (e.target.classList.contains('item-price') || e.target.classList.contains('item-quantity')) {
             updateItemTotal(e.target);
+            autoCalculate();
+        }
+        // Если изменились основные параметры
+        if (e.target.id === 'batchSize' || e.target.id === 'sellingPrice' || e.target.id === 'containerType') {
+            updateTotalVolume();
+            autoCalculate();
+        }
+        // Если изменились параметры ингредиентов
+        if (e.target.classList.contains('ingredient-dose') ||
+            e.target.classList.contains('ingredient-price-per-unit') ||
+            e.target.classList.contains('ingredient-package-size')) {
+            calculateIngredients();
+            autoCalculate();
         }
     });
+
+    // Обработчик для чекбоксов ингредиентов
+    document.addEventListener('change', function(e) {
+        if (e.target.classList.contains('ingredient-checkbox')) {
+            calculateIngredients();
+            autoCalculate();
+        }
+    });
+
+    // Первый расчет при загрузке страницы
+    updateTotalVolume();
+    calculateIngredients();
+    autoCalculate();
 });
+
+// Обновление общего объема партии
+function updateTotalVolume() {
+    const containerType = parseFloat(document.getElementById('containerType').value);
+    const batchSize = parseInt(document.getElementById('batchSize').value) || 0;
+    const totalVolume = (containerType * batchSize).toFixed(1);
+    document.getElementById('totalVolume').textContent = totalVolume + ' л';
+}
+
+// Расчет ингредиентов
+function calculateIngredients() {
+    const containerType = parseFloat(document.getElementById('containerType').value);
+    const batchSize = parseInt(document.getElementById('batchSize').value) || 0;
+    const totalVolume = containerType * batchSize; // в литрах
+
+    let totalRawMaterialsCost = 0;
+
+    // Молоко (в мл на 1л, цена за 1л)
+    const milkCheckbox = document.querySelector('.ingredient-checkbox[data-ingredient="milk"]');
+    if (milkCheckbox && milkCheckbox.checked) {
+        const milkDose = parseFloat(document.querySelector('.ingredient-dose[data-ingredient="milk"]').value) || 0;
+        const milkPricePerLiter = parseFloat(document.querySelector('.ingredient-price-per-unit[data-ingredient="milk"]').value) || 0;
+
+        const milkNeeded = (milkDose / 1000) * totalVolume; // в литрах
+        const milkCost = milkNeeded * milkPricePerLiter;
+
+        document.querySelector('.ingredient-total-needed[data-ingredient="milk"]').textContent = milkNeeded.toFixed(2) + ' л';
+        document.querySelector('.ingredient-cost[data-ingredient="milk"]').textContent = milkCost.toFixed(2) + ' ₽';
+        totalRawMaterialsCost += milkCost;
+    }
+
+    // Закваска (в граммах на 1л, цена за пачку, грамм в пачке)
+    const starterCheckbox = document.querySelector('.ingredient-checkbox[data-ingredient="starter"]');
+    if (starterCheckbox && starterCheckbox.checked) {
+        const starterDose = parseFloat(document.querySelector('.ingredient-dose[data-ingredient="starter"]').value) || 0;
+        const starterPricePerPackage = parseFloat(document.querySelector('.ingredient-price-per-unit[data-ingredient="starter"]').value) || 0;
+        const starterPackageSize = parseFloat(document.querySelector('.ingredient-package-size[data-ingredient="starter"]').value) || 1;
+
+        const starterNeeded = starterDose * totalVolume; // в граммах
+        const starterPricePerGram = starterPricePerPackage / starterPackageSize;
+        const starterCost = starterNeeded * starterPricePerGram;
+
+        document.querySelector('.ingredient-total-needed[data-ingredient="starter"]').textContent = starterNeeded.toFixed(1) + ' г';
+        document.querySelector('.ingredient-cost[data-ingredient="starter"]').textContent = starterCost.toFixed(2) + ' ₽';
+        totalRawMaterialsCost += starterCost;
+    }
+
+    // Инулин (в граммах на 1л, цена за пачку, грамм в пачке)
+    const inulinCheckbox = document.querySelector('.ingredient-checkbox[data-ingredient="inulin"]');
+    if (inulinCheckbox && inulinCheckbox.checked) {
+        const inulinDose = parseFloat(document.querySelector('.ingredient-dose[data-ingredient="inulin"]').value) || 0;
+        const inulinPricePerPackage = parseFloat(document.querySelector('.ingredient-price-per-unit[data-ingredient="inulin"]').value) || 0;
+        const inulinPackageSize = parseFloat(document.querySelector('.ingredient-package-size[data-ingredient="inulin"]').value) || 1;
+
+        const inulinNeeded = inulinDose * totalVolume; // в граммах
+        const inulinPricePerGram = inulinPricePerPackage / inulinPackageSize;
+        const inulinCost = inulinNeeded * inulinPricePerGram;
+
+        document.querySelector('.ingredient-total-needed[data-ingredient="inulin"]').textContent = inulinNeeded.toFixed(1) + ' г';
+        document.querySelector('.ingredient-cost[data-ingredient="inulin"]').textContent = inulinCost.toFixed(2) + ' ₽';
+        totalRawMaterialsCost += inulinCost;
+    }
+
+    // Обновляем итого по сырью
+    document.getElementById('raw_materials_total').textContent = totalRawMaterialsCost.toFixed(2) + ' ₽';
+}
 
 // Обновление суммы для конкретной строки
 function updateItemTotal(element) {
@@ -30,19 +122,74 @@ function addItem(containerId) {
         <button onclick="removeItem(this)" class="btn-remove">✕</button>
     `;
     container.appendChild(newRow);
+    // Автоматически пересчитываем после добавления
+    autoCalculate();
 }
 
 // Удаление строки
 function removeItem(button) {
     const row = button.closest('.item-row');
     row.remove();
+    // Автоматически пересчитываем после удаления
+    autoCalculate();
 }
 
 // Сбор данных из формы
 function collectFormData() {
-    const categories = ['raw_materials', 'packaging', 'logistics', 'taxes', 'labor', 'rent', 'other'];
+    const categories = ['packaging', 'logistics', 'taxes', 'labor', 'rent', 'other'];
     const items = {};
 
+    // Сырье - собираем из новой системы ингредиентов
+    items['raw_materials'] = [];
+    const containerType = parseFloat(document.getElementById('containerType').value);
+    const batchSize = parseInt(document.getElementById('batchSize').value) || 0;
+    const totalVolume = containerType * batchSize;
+
+    // Молоко
+    const milkCheckbox = document.querySelector('.ingredient-checkbox[data-ingredient="milk"]');
+    if (milkCheckbox && milkCheckbox.checked) {
+        const milkDose = parseFloat(document.querySelector('.ingredient-dose[data-ingredient="milk"]').value) || 0;
+        const milkPricePerLiter = parseFloat(document.querySelector('.ingredient-price-per-unit[data-ingredient="milk"]').value) || 0;
+        const milkNeeded = (milkDose / 1000) * totalVolume;
+        const milkCost = milkNeeded * milkPricePerLiter;
+        items['raw_materials'].push({
+            name: 'Молоко',
+            price: milkCost,
+            quantity: 1
+        });
+    }
+
+    // Закваска
+    const starterCheckbox = document.querySelector('.ingredient-checkbox[data-ingredient="starter"]');
+    if (starterCheckbox && starterCheckbox.checked) {
+        const starterDose = parseFloat(document.querySelector('.ingredient-dose[data-ingredient="starter"]').value) || 0;
+        const starterPricePerPackage = parseFloat(document.querySelector('.ingredient-price-per-unit[data-ingredient="starter"]').value) || 0;
+        const starterPackageSize = parseFloat(document.querySelector('.ingredient-package-size[data-ingredient="starter"]').value) || 1;
+        const starterNeeded = starterDose * totalVolume;
+        const starterCost = (starterNeeded / starterPackageSize) * starterPricePerPackage;
+        items['raw_materials'].push({
+            name: 'Закваска',
+            price: starterCost,
+            quantity: 1
+        });
+    }
+
+    // Инулин
+    const inulinCheckbox = document.querySelector('.ingredient-checkbox[data-ingredient="inulin"]');
+    if (inulinCheckbox && inulinCheckbox.checked) {
+        const inulinDose = parseFloat(document.querySelector('.ingredient-dose[data-ingredient="inulin"]').value) || 0;
+        const inulinPricePerPackage = parseFloat(document.querySelector('.ingredient-price-per-unit[data-ingredient="inulin"]').value) || 0;
+        const inulinPackageSize = parseFloat(document.querySelector('.ingredient-package-size[data-ingredient="inulin"]').value) || 1;
+        const inulinNeeded = inulinDose * totalVolume;
+        const inulinCost = (inulinNeeded / inulinPackageSize) * inulinPricePerPackage;
+        items['raw_materials'].push({
+            name: 'Инулин',
+            price: inulinCost,
+            quantity: 1
+        });
+    }
+
+    // Остальные категории - старая система
     categories.forEach(category => {
         const container = document.getElementById(category + '_items');
         const rows = container.querySelectorAll('.item-row');
@@ -61,7 +208,9 @@ function collectFormData() {
 
     return {
         name: document.getElementById('configName').value || 'Без названия',
-        batch_size: parseInt(document.getElementById('batchSize').value) || 1,
+        container_type: containerType,
+        batch_size: batchSize,
+        total_volume: totalVolume,
         selling_price: parseFloat(document.getElementById('sellingPrice').value) || 0,
         items: items
     };
@@ -86,6 +235,34 @@ async function calculate() {
         console.error('Error calculating:', error);
         alert('Ошибка при расчете');
     }
+}
+
+// Автоматический расчет с задержкой (debounce)
+let autoCalculateTimer;
+function autoCalculate() {
+    // Очищаем предыдущий таймер
+    clearTimeout(autoCalculateTimer);
+
+    // Запускаем новый таймер с задержкой 300ms
+    autoCalculateTimer = setTimeout(async () => {
+        const data = collectFormData();
+
+        try {
+            const response = await fetch('/api/calculate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+            displayResults(result);
+        } catch (error) {
+            console.error('Error auto-calculating:', error);
+            // Не показываем alert при автоматическом расчете
+        }
+    }, 300);
 }
 
 // Отображение результатов
